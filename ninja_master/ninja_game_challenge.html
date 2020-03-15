@@ -1,0 +1,59 @@
+<html>
+<body>
+	<div id="background">
+		<div id="character" style='position:absolute; top:100px; left:450px; background-image: url("./down1.png"); width:59px; height:86px;'></div>
+	</div>
+	<script type="text/javascript">
+		var leftValue = 450, topValue = 100, direction = "down", steps = "1";
+		
+		function step(){
+			if (steps == "1"){
+				steps = "2";
+			}
+			else {
+				steps = "1"
+			}
+		}
+
+		function update(){
+			document.getElementById("character").style.left = leftValue + "px";
+			document.getElementById("character").style.top = topValue + "px";
+			document.getElementById("character").style.backgroundImage = "url('./"+direction+steps+".png')";
+		}
+
+		document.onkeydown = function(e){
+			if (e.keyCode == 37) { // Go left
+				if (leftValue >= 10 && leftValue <= 500){
+					leftValue -= 10;
+					direction = "left";
+					step()
+				}
+			}
+			else if (e.keyCode == 38) { // Go up
+				if (topValue >= 10 && topValue <= 500){
+					topValue -= 10;
+					direction = "top";
+					step()
+				}
+			}
+			else if (e.keyCode == 39) { // Go right
+				if (leftValue >= 0 && leftValue <= 490){
+					leftValue += 10;
+					direction = "right";
+					step()
+				}
+			}
+			else if (e.keyCode == 40) { //go down
+				if (topValue >= 0 && topValue <= 490){
+					topValue += 10;
+					direction = "down";
+					step()
+				}
+			}
+			update()			
+
+		}
+
+	</script>
+</body>
+</html>

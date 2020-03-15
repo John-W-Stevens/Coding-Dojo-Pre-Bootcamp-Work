@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Airplane Game</title>
+</head>
+
+<div id="game-border">
+	<style type="text/css">
+		#game-border {
+			background-color: black;
+			z-index: 0;
+			size: all;
+			padding: 40px;
+			width: 900px;
+			/*height: 700px;*/
+
+		}
+		#game {
+			/*vertical-align: middle;*/
+			/*z-index: 1;*/
+		}
+	</style>
+
+
+<div id="game">
+
+<body>
+
+
+	<style type="text/css">
+		#ocean {
+			background-image: url("space.jpg");
+			border: 2px solid white;
+			width: 900px;
+			height: 700px;
+			z-index: 0;
+		}
+
+		.player {
+			position: absolute;
+			width: 89px;
+			height: 88px;
+			background-image: url("spaceship.png");
+			z-index: 2;
+		}
+		.enemy {
+			position: absolute;
+			width: 70px;
+			height: 75px;
+			background-image: url("enemy_spaceship.png");
+		}
+		.missile {
+			position: absolute;
+			background-color: yellow;
+			width: 4px;
+			height: 10px;
+			z-index: 1;
+		}
+
+		.rocket {
+			position: absolute;
+			background-image: url("missile.png");
+			width: 20px;
+			height: 106px;
+			z-index: 1;
+		}
+
+		#player-score {
+			position: absolute;
+			top: 50px;
+			left: 800px;
+			width: 140px;
+			height: 40px;
+			background-color: transparent;
+			z-index: 1;
+		}
+
+		h1 {
+			color: white;
+			position: relative;
+			text-align: center;
+			vertical-align: middle;
+			line-height: 10px;
+			font-size: 24px;
+		}
+
+		#pause-game {
+			position: absolute;
+			top: 350px;
+			left: 450px;
+			width: 180px;
+			height: 50px;
+			background-color: transparent;
+			z-index: 2;
+			color: transparent;
+			font-size: 30px;
+		}
+
+
+	</style>
+
+	<div id="ocean">
+		<div id="players"></div>
+		<div id="enemies"></div>
+		<div id="missiles"></div>
+		<div id="rockets"></div>		
+		<div id="player-score">
+			<h1 id="score">Score: 0</h1>
+		</div>
+		<div id="pause-game">Paused</div>
+	</div>
+	
+	<script type="text/javascript">
+	
+	var player = {
+		left: 450,
+		top: 630
+	}
+
+	var enemies = [
+		{left: 270, top: -125},
+		{left: 330, top: -75},
+		{left: 390, top: -25},
+		{left: 450, top: 25},		
+		{left: 510, top: -25},
+		{left: 570, top: -75},
+		{left: 630, top: -125},
+	]
+
+	var missiles = [];
+	var rockets = [];
+
+	var score = 0;
+
+	function drawScore(){
+		content = "<h1 id='score'>Score: "+score+"</h1>"
+		document.getElementById("score").innerHTML = content;
+	}
+
+	function drawPause(){
+		if (paused){
+			content = "<div id='pause-game' style=' position: absolute; top: 0px; left: 0px; color: white;'>Paused</div";
+			document.getElementById("pause-game").innerHTML = content;
+
+		}
+		else {
+			content = "<div id='pause-game' style='color: transparent;'>Paused</div";
+			document.getElementById("pause-game").innerHTML = content;
+		}
+	}
+
+	function drawPlayer(){
+		content =  "<div class='player' style='left:"+player.left+"px; top:"+player.top+"px'></div>";
+		document.getElementById("players").innerHTML = content;
+	}
+
+	function drawEnemies(){
+		content = "";
+		for (var i = 0; i < enemies.length; i++){
+			if (enemies[i].top > 20){
+				content +=  "<div class='enemy' style='left:"+enemies[i].left+"px; top:"+enemies[i].top+"px'></div>";
+			}
+		}
+		document.getElementById("enemies").innerHTML = content;
+
+	}
+
+	function drawMissiles(){
+		content = "";
+		for (var i = 0; i < missiles.length; i++){
+			content += "<div class='missile' style='left:"+missiles[i].left+"px; top:"+missiles[i].top+"px'></div>";
+		}
+		document.getElementById("missiles").innerHTML = content;
+	}
+
+	function drawRockets(){
+		content = "";
+		for (var i = 0; i < rockets.length; i++){
+			content += "<div class='rocket' style='left:"+rockets[i].left+"px; top:"+rockets[i].top+"px'></div>";
+		}
+		document.getElementById("rockets").innerHTML = content;		
+	}
+
+	function moveEnemies(){
+		for (var i = 0; i < enemies.length; i++){
+			var speed;
+			if (score < 50){
+				speed = randomIntFromRange(0.5,1.0);
+			}
+			else if (score >= 50 && score <= 100){
+				speed = randomIntFromRange(0.5,1.2)
+			}
+			else if (score > 100 && score <= 200){
+				speed = randomIntFromRange(0.5,1.5)
+			}
+			enemies[i].top += speed;
+		}
+	}
+
+	function moveMissiles(){
+		for (var i = 0; i < missiles.length; i++){
+			missiles[i].top -= 10;
+		}
+	}
+
+	function moveRocket(){
+		for (var i = 0; i < rockets.length; i++){
+			rockets[i].top -= 1;
+		}
+	}
+
+	var player_speed = 40;
+
+	function playerSpeed(){
+		if (score >= 40 && score < 60){
+			player_speed = 45;
+		}
+		else if (score >= 60 && score <= 100){
+			player_speed = 50;
+		}
+		else if (score > 100 && score <= 150){
+			player_speed = 55;
+		}
+		else if (score > 150 && score <= 300){
+			player_speed = 60;
+		}
+	}
+
+	function fireMissile(){
+		if (upgrade3 == true){
+			missiles.push({left: (player.left + 10), top: (player.top - 8)})
+			missiles.push({left: (player.left + 30), top: (player.top - 8)})
+			missiles.push({left: (player.left + 54), top: (player.top - 8)})
+			missiles.push({left: (player.left + 74), top: (player.top - 8)})
+		}
+
+		else if (upgrade2 == true){
+			missiles.push({left: (player.left + 22), top: (player.top - 8)})
+			missiles.push({left: (player.left + 42), top: (player.top - 8)})
+			missiles.push({left: (player.left + 62), top: (player.top - 8)})
+		}
+
+		else if (upgrade1 == true){
+			missiles.push({left: (player.left + 30), top: (player.top - 8)})
+			missiles.push({left: (player.left + 54), top: (player.top - 8)})
+		}
+		else {
+			missiles.push({left: (player.left + 42), top: (player.top - 8)})
+		}
+	}
+
+	function fireRocket(){
+		rockets.push( {left: (player.left + 42), top: (player.top - 8)})
+	}
+
+	var paused = false;
+
+	var keysPressed = [];
+
+	document.onkeyup = function(e) {
+		new_keys = [];
+		for (var i = 0; i < keysPressed.length; i++){
+			if (keysPressed[i] != e.keyCode) {
+				new_keys.push(keysPressed[i])
+			}
+		}
+		keysPressed = new_keys;
+	}
+
+	document.onkeydown = function(e) {
+		playerSpeed();
+
+		console.log(e.keyCode)
+		if (e.keyCode == 80){ // pause game
+			if (paused == false){
+				paused = true;
+				drawPause();
+			}
+			else (paused = false);
+				drawPause();
+				gameLoop();
+		}
+
+		keysPressed[e.keyCode] = e.keyCode;
+		// console.log(keysPressed)
+
+		for (var i = 0; i < keysPressed.length; i++){
+			if (!paused){
+
+				if(keysPressed[i] == 37) { // go left
+					if (player.left > 80) {
+						player.left -= player_speed;
+					}
+				}
+
+				if (keysPressed[i] == 38) { // go up
+					if (player.top > 400){
+						player.top -= player_speed;
+					}
+				}
+				if(keysPressed[i] == 39) { // go right
+					if (player.left < 820){
+						player.left += player_speed;
+					}
+				}
+
+				if (keysPressed[i] == 40) { // go down
+					if (player.top < 630){
+						player.top += player_speed;
+					}
+				}
+				if (keysPressed[i] == 32) { // fire
+					fireMissile();
+				}
+				if (keysPressed[i] == 82) {
+					fireRocket();
+				}
+			}
+		}
+
+		drawPlayer();
+		drawMissiles();
+		drawRockets();
+
+	}
+
+	function cleanup(){
+		// removes enemies and missles that have left game space
+		var esapced_enemies = 0;
+		var new_enemies = [];
+		for (var i = 0; i < enemies.length; i++){
+			if (enemies[i].top < 640){
+				new_enemies.push(enemies[i])
+			}
+			else {
+				esapced_enemies += 1.
+			}
+		}
+		if (new_enemies.length > 0){
+			enemies = new_enemies;
+		}
+		else {
+			enemies = spawnEnemies();
+		}
+
+		var new_missiles = [];
+		for (var i = 0; i < missiles.length; i++){
+			if (missiles[i].top > 0){
+				new_missiles.push(missiles[i])
+			}
+		}
+		missiles = new_missiles;
+
+		var new_rockets = [];
+		for (var i = 0; i < rockets.length; i++){
+			if (rockets[i].top > 0){
+				new_rockets.push(rockets[i])
+			}
+		}
+		rockets = new_rockets;
+
+		return esapced_enemies;
+	}
+
+	function distance(x1, y1, x2, y2) {
+	  var xDist = x2 - x1
+	  var yDist = y2 - y1
+	  return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2))
+	}
+
+	function randomIntFromRange(min, max) {
+	  return Math.floor(Math.random() * (max - min + 1) + min)
+	}
+
+
+	function spawnEnemies(){
+		var num_enemies;
+		if (score <= 50) {
+			num_enemies = randomIntFromRange(10,25)
+		}
+		else if (score <= 100) {
+			num_enemies = randomIntFromRange(15,35)
+		}
+		else if (score <= 200) {
+			num_enemies = randomIntFromRange(25,50)
+		}
+
+
+		var num_enemies = randomIntFromRange(10,25);
+		enemies = []
+		for (var i = 0; i < num_enemies; i++){
+			enemy = {left:randomIntFromRange(100,750), top: randomIntFromRange(-20,-800)}
+			var tooClose = false;
+			if (enemies.length > 0){
+				for (var j = 0; j < enemies.length; j++){
+					if (distance(enemy.left,enemy.top,enemies[j].left,enemies[j].top) < 75){
+						enemy.left = randomIntFromRange(100, 750);
+						enemy.top = randomIntFromRange(100,750);
+						tooClose = true;
+						break;
+					}
+				}
+				if (!tooClose){
+					enemies.push(enemy)
+				}
+			}
+			else {
+				enemies.push(enemy);
+			}
+		}
+		return enemies
+	}
+
+	function checkForCollisions(){
+		// collisions between missiles and enemies
+		// remove shotdown enemies and the missiles that shot them down
+		var shotDown = 0;
+		var new_enemies = [];
+		var removed_missiles = []; // index position for missiles to be removed
+		var removed_rockets = [];
+
+		for (var i = 0; i < enemies.length; i++){
+			new_enemies.push(enemies[i])
+			for (var j = 0; j < missiles.length; j++){
+				if (missiles[j].left >= enemies[i].left - 35 && missiles[j].left <= enemies[i].left + 65){
+					if (missiles[j].top <= enemies[i].top + 40 && missiles[j].top >= enemies[i].top - 40){
+						// remove plane 
+						new_enemies.pop();
+						shotDown += 1;
+						removed_missiles.push(j) // index position for missle to be removed
+						break;
+					}
+				}
+			}
+			for (var j = 0; j < rockets.length; j++){
+				if (rockets[j].left >= enemies[i].left - 35 && rockets[j].left <= enemies[i].left + 65){
+					if (rockets[j].top <= enemies[i].top + 40 && rockets[j].top >= enemies[i].top - 40){
+						// remove plane 
+						new_enemies.pop();
+						shotDown += 1;
+						removed_rockets.push(j) // index position for missle to be removed
+						break;
+					}
+				}
+			}
+		}
+		if (new_enemies.length > 0){
+			enemies = new_enemies;
+		}
+		else {
+			enemies = spawnEnemies();
+		}
+		var new_missiles = [];
+		for (var i = 0; i < missiles.length; i++){
+			var remove = false;
+			for (var j = 0; j < removed_missiles.length; j++){
+				if (i == removed_missiles[j]) {
+					remove = true;
+				}
+			}
+			if (!remove){
+				new_missiles.push(missiles[i])
+			}
+		}
+		var new_rockets = [];
+		for (var i = 0; i < rockets.length; i++){
+			var remove = false;
+			for (var j = 0; j < removed_rockets.length; j++){
+				if (i == removed_rockets[j]) {
+					remove = true;
+				}
+			}
+			if (!remove){
+				new_rockets.push(rockets[i])
+			}
+		}
+		missiles = new_missiles;
+		rockets = new_rockets;
+
+		return shotDown
+	}
+
+	var upgrade1 = false;
+	var upgrade2 = false;
+	var upgrade3 = false;
+	var upgrade4 = false;
+
+	function gameLoop(){
+		// console.log(enemies)
+		if (paused){
+			return
+		}
+		var num_enemies = enemies.length
+		drawPlayer();
+		moveEnemies();
+		moveMissiles();
+		moveRocket();
+		var shotDown = checkForCollisions();
+		score += shotDown
+		var escaped_enemies = cleanup();
+		
+		score = Math.max(0, score - escaped_enemies);
+
+		// score -= escaped_enemies
+		if (score >= 50){
+			upgrade3 = true;
+		}
+		else if (score >= 40){
+			upgrade2 = true;
+		}
+		else if (score >= 25){
+			upgrade1 = true;
+		}
+		drawEnemies();
+		drawMissiles();
+		drawRockets();
+		drawScore();
+		setTimeout(gameLoop, 1);
+	}
+
+	gameLoop();
+
+
+
+//	add score
+// add collision detection for player and enemies
+// add border
+// add pause button
+// randomize enemy spawn
+// randomize enemy speeds
+
+
+	</script>
+</body>
+</div>
+</div>
+</html>
